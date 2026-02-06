@@ -3,16 +3,16 @@
 Plugin Name: Evermore
 Plugin URI: http://thunderguy.com/semicolon/wordpress/evermore-wordpress-plugin/
 Description: Abbreviate all posts when viewed on multiple post pages. This makes all posts behave as if there is a "&lt;!--more--&gt;" at an appropriate spot inside the content.
-Version: 2.4
+Version: 2.5
 Author: Bennett McElwee
 Author URI: http://thunderguy.com/semicolon/
 Requires at least: 3.0
-Tested up to: 4.3
+Tested up to: 6.9
 Licence: GPLv2 or later
 
-$Revision: 1241429 $
+$Revision: 3446990 $
 
-Copyright (C) 2005-15 Bennett McElwee
+Copyright (C) 2005-26 Bennett McElwee
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -125,12 +125,15 @@ class EvermorePlugin {
 				$skipped_paras = $matches[1];
 				$skipped_end = $matches[2];
 				$unskipped_paras = substr($unskipped_chars, strlen($skipped_paras) + strlen($skipped_end));
-				if ($link_on_new_para) {
-					// Add 2 newlines after the more, to stop WP adding
-					// a <br> after the more which leaves a spurious blank line.
-					return $skipped_chars . $skipped_paras . $skipped_end . "<!--more-->\n\n" . $unskipped_paras;
-				} else {
-					return $skipped_chars . $skipped_paras . '<!--more-->' . $skipped_end . $unskipped_paras;
+				if (trim(wp_strip_all_tags($unskipped_paras)) !== '') {
+					// We can insert a more here, since there is more content after the skipped paras
+					if ($link_on_new_para) {
+						// Add 2 newlines after the more, to stop WP adding
+						// a <br> after the more which leaves a spurious blank line.
+						return $skipped_chars . $skipped_paras . $skipped_end . "<!--more-->\n\n" . $unskipped_paras;
+					} else {
+						return $skipped_chars . $skipped_paras . '<!--more-->' . $skipped_end . $unskipped_paras;
+					}
 				}
 			}
 		}
@@ -161,7 +164,7 @@ class EvermorePlugin {
 		}
 		if ($diagnostic_reason == "") {
 			// We must analyse the content to determine the reason
-			$diagnostic_reason .= "Post did not contain end-of-paragraph";
+			$diagnostic_reason .= "Post did not contain end-of-paragraph with subsequent content";
 			// Mark newlines, escape HTML
 			$diagnostic_unskipped_chars = substr($post_content, $char_skip_count);
 			$diagnostic_unskipped_chars = str_replace("\\", "\\\\", $diagnostic_unskipped_chars);
